@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>小缘服务器道具购买-用户版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            padding: 20px 0;
+            position: relative;
+            --bg-opacity: 0.8;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, var(--bg-opacity));
+            z-index: -1;
+            transition: background-color 0.3s ease;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        .page {
+            padding: 30px;
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .title {
+            text-align: center;
+            color: #2d7ff9;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 15px;
+        }
+        .form-item input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-item input[type="file"] {
+            padding: 8px;
+            border: 1px dashed #ddd;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px 0;
+            border: 2px solid #eee;
+            display: none;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #2d7ff9;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #1a6ef0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-group button {
+            flex: 1;
+        }
+        .btn-secondary {
+            background-color: #909399;
+        }
+        .btn-secondary:hover {
+            background-color: #808285;
+        }
+        .goods-list {
+            margin-top: 20px;
+        }
+        .goods-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .goods-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .goods-info {
+            flex: 1;
+        }
+        .goods-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .goods-price {
+            color: #ff4d4f;
+            font-weight: bold;
+        }
+        .goods-stock {
+            color: #67c23a;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        .stock-out {
+            color: #ff4d4f;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-name {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .notice-bar {
+            background-color: #e8f4ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #2d7ff9;
+            font-size: 14px;
+        }
+        .notice-bar strong {
+            color: #1a6ef0;
+        }
+        .qr-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            display: none;
+        }
+        .qr-modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+        .qr-img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin: 20px auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .qr-desc {
+            color: #666;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        .close-modal {
+            margin-top: 20px;
+        }
+        .error-tip {
+            color: #ff4d4f;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .tab-btn.active {
+            color: #2d7ff9;
+            border-bottom: 2px solid #2d7ff9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .order-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .order-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status-paid {
+            background: #e8f4ff;
+            color: #2d7ff9;
+        }
+        .status-sent {
+            background: #f0f9eb;
+            color: #67c23a;
+        }
+        .status-completed {
+            background: #f5fafe;
+            color: #1890ff;
+        }
+        .send-data-item {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+        }
+        .send-img {
+            width: 150px;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .download-link {
+            display: inline-block;
+            color: #2d7ff9;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 用户注册页（默认显示） -->
+        <div class="page active" id="register-page">
+            <div class="notice-bar" id="register-notice"></div>
+            <h2 class="title">用户注册</h2>
+            <div class="form-item">
+                <label for="reg-username">用户名</label>
+                <input type="text" id="reg-username" placeholder="请输入3-12位用户名">
+                <div id="reg-username-error" class="error-tip">用户名格式错误（3-12位）</div>
+            </div>
+            <div class="form-item">
+                <label for="reg-password">密码</label>
+                <input type="password" id="reg-password" placeholder="请输入6-16位密码">
+                <div id="reg-password-error" class="error-tip">密码格式错误（6-16位）</div>
+            </div>
+            <div class="form-item">
+                <label for="reg-avatar">上传头像</label>
+                <input type="file" id="reg-avatar" accept="image/*" onchange="previewAvatar('reg-avatar', 'reg-avatar-preview')">
+                <img id="reg-avatar-preview" class="avatar-preview" alt="头像预览">
+                <div id="reg-avatar-error" class="error-tip">请上传头像</div>
+            </div>
+            <button onclick="userRegister()">注册账户</button>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="switchPage('login-page')">已有账户？去登录</button>
+            </div>
+        </div>
+        <!-- 用户登录页 -->
+        <div class="page" id="login-page">
+            <div class="notice-bar" id="login-notice"></div>
+            <h2 class="title">用户登录</h2>
+            <div class="form-item">
+                <label for="login-username">用户名</label>
+                <input type="text" id="login-username" placeholder="请输入用户名">
+            </div>
+            <div class="form-item">
+                <label for="login-password">密码</label>
+                <input type="password" id="login-password" placeholder="请输入密码">
+            </div>
+            <button onclick="userLogin()">登录</button>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="switchPage('register-page')">没有账户？去注册</button>
+            </div>
+        </div>
+        <!-- 用户中心页 -->
+        <div class="page" id="user-shop-page">
+            <div class="notice-bar" id="shop-notice"></div>
+            <div class="user-info" id="user-info">
+                <img id="user-show-avatar" class="user-avatar" alt="用户头像">
+                <div class="user-name" id="user-show-name"></div>
+            </div>
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchUserTab('goods-tab', this)">道具商城</button>
+                <button class="tab-btn" onclick="switchUserTab('order-tab', this)">我的订单</button>
+            </div>
+            <div class="tab-content active" id="goods-tab">
+                <h2 class="title">道具商城</h2>
+                <div class="goods-list" id="user-goods-list"></div>
+            </div>
+            <div class="tab-content" id="order-tab">
+                <h2 class="title">我的订单</h2>
+                <div id="user-order-list"></div>
+            </div>
+            <button class="btn-secondary" style="margin-top:20px" onclick="userLogout()">退出登录</button>
+        </div>
+    </div>
+    <!-- 收款码弹窗 -->
+    <div class="qr-modal" id="qr-modal">
+        <div class="qr-modal-content">
+            <h3 class="title" style="font-size:20px;margin-bottom:10px">请完成付款</h3>
+            <p>订单编号：<span id="modal-order-no"></span></p>
+            <p>应付金额：<span id="modal-amount" style="color:#ff4d4f;font-weight:bold"></span></p>
+            <img id="modal-qr-img" class="qr-img" alt="收款码">
+            <div class="qr-desc" id="modal-qr-desc"></div>
+            <button class="close-modal" onclick="closeQrModal()">已付款，关闭弹窗</button>
+        </div>
+    </div>
+    <!-- 资料查看弹窗 -->
+    <div class="qr-modal" id="data-view-modal">
+        <div class="qr-modal-content" style="max-width: 500px;">
+            <h3 class="title" style="font-size:20px;margin-bottom:10px">管理员发送的资料</h3>
+            <button class="close-modal" onclick="closeDataModal()" style="position: absolute; top: 15px; right: 15px; width: auto; padding: 0;">×</button>
+            <div id="data-view-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // 统一存储键名（与管理员端一致，实现数据互通）
+        const USER_KEY = 'xy_server_users';
+        const GOODS_KEY = 'xy_server_goods';
+        const PAY_RECORD_KEY = 'xy_server_pay_records';
+        const CURRENT_USER_KEY = 'xy_current_user';
+        const BG_CONFIG_KEY = 'xy_server_bg_config';
+        const NOTICE_KEY = 'xy_server_notice';
+        const QR_CODE_KEY = 'xy_server_qr_code';
+        const SEND_DATA_KEY = 'xy_server_send_data'; // 存储管理员发送的资料
+
+        // 页面加载初始化：加载互通配置+检查登录状态
+        window.onload = function() {
+            loadBgConfig(); // 加载管理员设置的背景（互通）
+            loadNotice(); // 加载管理员设置的公告（互通）
+            checkLoginStatus(); // 自动登录检测
+            renderGoodsList(); // 渲染管理员上架的商品（互通）
+        }
+
+        // 加载管理员配置的背景（互通）
+        function loadBgConfig() {
+            const bgConfig = JSON.parse(localStorage.getItem(BG_CONFIG_KEY) || '{}');
+            if (bgConfig.bgUrl) {
+                document.body.style.backgroundImage = `url(${bgConfig.bgUrl})`;
+                document.body.style.setProperty('--bg-opacity', bgConfig.opacity || 0.8);
+            }
+        }
+
+        // 加载管理员配置的公告（互通）
+        function loadNotice() {
+            const notice = localStorage.getItem(NOTICE_KEY) || '注册后即可购买服务器道具，如有问题请联系管理员';
+            const noticeHtml = `<strong>公告：</strong>${notice}`;
+            document.getElementById('register-notice').innerHTML = noticeHtml;
+            document.getElementById('login-notice').innerHTML = noticeHtml;
+            document.getElementById('shop-notice').innerHTML = noticeHtml;
+        }
+
+        // 切换页面
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.error-tip').forEach(el => el.style.display = 'none');
+        }
+
+        // 用户端标签页切换（商城/订单）
+        function switchUserTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'order-tab') {
+                renderUserOrders(); // 切换到订单页时渲染订单
+            }
+        }
+
+        // 预览头像
+        function previewAvatar(fileId, previewId) {
+            const file = document.getElementById(fileId).files[0];
+            const preview = document.getElementById(previewId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+                document.getElementById('reg-avatar-error').style.display = 'none';
+            }
+        }
+
+        // 生成订单号
+        function generateOrderNo() {
+            const timestamp = Date.now().toString().slice(-8);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `XY${timestamp}${random}`;
+        }
+
+        // 注册功能（修复+完善）
+        function userRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const avatarFile = document.getElementById('reg-avatar').files[0];
+            let isValid = true;
+            // 表单校验
+            if (username.length < 3 || username.length > 12) {
+                document.getElementById('reg-username-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('reg-username-error').style.display = 'none';
+            }
+            if (password.length < 6 || password.length > 16) {
+                document.getElementById('reg-password-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('reg-password-error').style.display = 'none';
+            }
+            if (!avatarFile) {
+                document.getElementById('reg-avatar-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('reg-avatar-error').style.display = 'none';
+            }
+            if (!isValid) return;
+            // 检查用户名是否已存在（多用户唯一）
+            const users = JSON.parse(localStorage.getItem(USER_KEY) || '[]');
+            if (users.some(u => u.username === username)) {
+                alert('用户名已存在！');
+                return;
+            }
+            // 头像转base64存储（持久化，多设备可用）
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const user = {
+                    username,
+                    password,
+                    avatarUrl: e.target.result,
+                    createTime: new Date().toLocaleString()
+                };
+                users.push(user);
+                localStorage.setItem(USER_KEY, JSON.stringify(users));
+                // 自动登录
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+                alert('注册成功！已自动登录');
+                showUserInfo(user);
+                switchPage('user-shop-page');
+                renderGoodsList();
+            }
+            reader.readAsDataURL(avatarFile);
+        }
+
+        // 登录功能（修复）
+        function userLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            if (!username || !password) {
+                alert('请填写完整登录信息！');
+                return;
+            }
+            // 验证用户（多用户数据互通）
+            const users = JSON.parse(localStorage.getItem(USER_KEY) || '[]');
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+                alert('登录成功！');
+                showUserInfo(user);
+                switchPage('user-shop-page');
+                renderGoodsList();
+            } else {
+                alert('用户名或密码错误！');
+            }
+        }
+
+        // 退出登录
+        function userLogout() {
+            localStorage.removeItem(CURRENT_USER_KEY);
+            alert('已退出登录');
+            switchPage('login-page');
+        }
+
+        // 显示用户信息
+        function showUserInfo(user) {
+            document.getElementById('user-show-name').textContent = user.username;
+            document.getElementById('user-show-avatar').src = user.avatarUrl;
+        }
+
+        // 渲染商品列表（读取管理员上架的商品，互通）
+        function renderGoodsList() {
+            const goods = JSON.parse(localStorage.getItem(GOODS_KEY) || '[]');
+            const goodsListEl = document.getElementById('user-goods-list');
+            goodsListEl.innerHTML = '';
+            if (goods.length === 0) {
+                goodsListEl.innerHTML = '<p style="text-align:center;color:#999;">暂无上架商品</p>';
+                return;
+            }
+            goods.forEach(good => {
+                const isStockOut = good.stock <= 0;
+                const goodsItem = document.createElement('div');
+                goodsItem.className = 'goods-item';
+                goodsItem.innerHTML = `
+                    <img src="${good.imgUrl}" class="goods-img" alt="${good.name}">
+                    <div class="goods-info">
+                        <div class="goods-name">${good.name}</div>
+                        <div class="goods-price">¥${good.price}</div>
+                        <div class="goods-stock ${isStockOut ? 'stock-out' : ''}">
+                            ${isStockOut ? '库存不足' : `库存：${good.stock}件`}
+                        </div>
+                    </div>
+                    <button ${isStockOut ? 'disabled style="background:#ccc;cursor:not-allowed"' : ''} 
+                            onclick="buyGoods('${good.id}')">
+                        ${isStockOut ? '已售罄' : '立即购买'}
+                    </button>
+                `;
+                goodsListEl.appendChild(goodsItem);
+            });
+        }
+
+        // 购买商品（读取管理员收款码，互通）
+        function buyGoods(goodId) {
+            const goods = JSON.parse(localStorage.getItem(GOODS_KEY) || '[]');
+            const good = goods.find(g => g.id === goodId);
+            const qrConfig = JSON.parse(localStorage.getItem(QR_CODE_KEY) || '{}');
+            const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || '{}');
+            if (!good || good.stock <= 0) {
+                alert('该道具已售罄！');
+                return;
+            }
+            if (!qrConfig.qrUrl) {
+                alert('管理员未设置收款码，无法购买！');
+                return;
+            }
+            // 生成订单
+            const orderNo = generateOrderNo();
+            // 显示管理员设置的收款码（互通）
+            document.getElementById('modal-order-no').textContent = orderNo;
+            document.getElementById('modal-amount').textContent = `¥${good.price}`;
+            document.getElementById('modal-qr-img').src = qrConfig.qrUrl;
+            document.getElementById('modal-qr-desc').textContent = qrConfig.desc || '请扫描上方二维码支付，支付完成后请等待管理员发送资料';
+            document.getElementById('qr-modal').style.display = 'flex';
+            // 模拟支付成功（实际需对接支付回调）
+            setTimeout(() => {
+                // 扣减库存（多用户共享库存，互通）
+                good.stock--;
+                localStorage.setItem(GOODS_KEY, JSON.stringify(goods));
+                // 记录支付记录（管理员可查看，互通）
+                const payRecords = JSON.parse(localStorage.getItem(PAY_RECORD_KEY) || '[]');
+                payRecords.push({
+                    orderNo,
+                    username: currentUser.username,
+                    goodsName: good.name,
+                    price: good.price,
+                    payTime: new Date().toLocaleString()
+                });
+                localStorage.setItem(PAY_RECORD_KEY, JSON.stringify(payRecords));
+            }, 30000);
+        }
+
+        // 关闭收款码弹窗
+        function closeQrModal() {
+            document.getElementById('qr-modal').style.display = 'none';
+            renderGoodsList(); // 刷新库存
+            alert('支付已完成！请等待管理员发送资料，可在「我的订单」中查看进度');
+        }
+
+        // 渲染用户订单列表
+        function renderUserOrders() {
+            const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || '{}');
+            const records = JSON.parse(localStorage.getItem(PAY_RECORD_KEY) || '[]');
+            const sendDataList = JSON.parse(localStorage.getItem(SEND_DATA_KEY) || '[]');
+            const userOrders = records.filter(record => record.username === currentUser.username);
+            const orderListEl = document.getElementById('user-order-list');
+            
+            if (userOrders.length === 0) {
+                orderListEl.innerHTML = '<p style="text-align:center;color:#999;">暂无订单记录</p>';
+                return;
+            }
+
+            orderListEl.innerHTML = '';
+            userOrders.forEach(record => {
+                const sendData = sendDataList.find(item => item.orderNo === record.orderNo);
+                const isSent = !!sendData;
+                const isCompleted = isSent && sendData.isCompleted;
+                let statusHtml = '';
+                let actionHtml = '';
+                
+                if (isCompleted) {
+                    statusHtml = '<span class="order-status status-completed">已完成</span>';
+                } else if (isSent) {
+                    statusHtml = '<span class="order-status status-sent">已发送资料</span>';
+                    actionHtml = `<button class="btn-secondary" onclick="viewSendData('${record.orderNo}')" style="margin-top:10px">查看资料</button>`;
+                } else {
+                    statusHtml = '<span class="order-status status-paid">已付款待处理</span>';
+                }
+
+                orderListEl.innerHTML += `
+                    <div class="order-item">
+                        <p><strong>订单号：</strong>${record.orderNo} ${statusHtml}</p>
+                        <p><strong>道具：</strong>${record.goodsName}</p>
+                        <p><strong>金额：</strong>${record.price} 元</p>
+                        <p><strong>付款时间：</strong>${record.payTime}</p>
+                        ${isSent ? `<p><strong>资料发送时间：</strong>${sendData.sendTime}</p>` : ''}
+                        ${actionHtml}
+                    </div>
+                `;
+            });
+        }
+
+        // 查看管理员发送的资料
+        function viewSendData(orderNo) {
+            const sendDataList = JSON.parse(localStorage.getItem(SEND_DATA_KEY) || '[]');
+            const sendData = sendDataList.find(item => item.orderNo === orderNo);
+            if (!sendData) {
+                alert('暂无相关资料');
+                return;
+            }
+
+            let contentHtml = `
+                <p><strong>文字说明：</strong>${sendData.text}</p>
+            `;
+
+            // 显示图片（如有）
+            if (sendData.imgUrl) {
+                contentHtml += `<p><strong>附件图片：</strong><br><img src="${sendData.imgUrl}" class="send-img"></p>`;
+            }
+
+            // 显示下载链接（如有）
+            if (sendData.link) {
+                contentHtml += `<p><strong>下载链接：</strong><br><a href="${sendData.link}" class="download-link" target="_blank">点击下载（新窗口打开）</a></p>`;
+            }
+
+            document.getElementById('data-view-content').innerHTML = contentHtml;
+            document.getElementById('data-view-modal').style.display = 'flex';
+        }
+
+        // 关闭资料查看弹窗
+        function closeDataModal() {
+            document.getElementById('data-view-modal').style.display = 'none';
+        }
+
+        // 检查登录状态（页面刷新后保持登录）
+        function checkLoginStatus() {
+            const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                showUserInfo(user);
+                switchPage('user-shop-page');
+            }
+        }
+    </script>
+</body>
+</html>

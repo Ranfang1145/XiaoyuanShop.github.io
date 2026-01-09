@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>小缘服务器道具购买-管理版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            padding: 20px 0;
+            position: relative;
+            --bg-opacity: 0.8;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, var(--bg-opacity));
+            z-index: -1;
+            transition: background-color 0.3s ease;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        .page {
+            padding: 30px;
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .title {
+            text-align: center;
+            color: #2d7ff9;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 15px;
+        }
+        .form-item input, .form-item textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-item input[type="file"] {
+            padding: 8px;
+            border: 1px dashed #ddd;
+        }
+        .form-item input[type="range"] {
+            padding: 0;
+            height: 6px;
+        }
+        .form-item textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .avatar-preview, .bg-preview, .qr-preview, .send-img-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin: 10px 0;
+            border: 2px solid #eee;
+            display: none;
+        }
+        .bg-preview {
+            width: 100%;
+            height: 180px;
+            max-width: 300px;
+        }
+        .qr-preview {
+            width: 150px;
+            height: 150px;
+        }
+        .opacity-value {
+            text-align: center;
+            color: #666;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #2d7ff9;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #1a6ef0;
+        }
+        .btn-secondary {
+            background-color: #909399;
+        }
+        .btn-secondary:hover {
+            background-color: #808285;
+        }
+        .btn-success {
+            background-color: #67c23a;
+        }
+        .btn-success:hover {
+            background-color: #52c41a;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-group button {
+            flex: 1;
+        }
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .tab-btn.active {
+            color: #2d7ff9;
+            border-bottom: 2px solid #2d7ff9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .goods-list {
+            margin-top: 20px;
+        }
+        .goods-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .goods-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .goods-info {
+            flex: 1;
+        }
+        .goods-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .goods-price {
+            color: #ff4d4f;
+            font-weight: bold;
+
+        }
+        .goods-stock {
+            color: #67c23a;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        .stock-out {
+            color: #ff4d4f;
+        }
+        .record-item {
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .record-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status-paid {
+            background: #e8f4ff;
+            color: #2d7ff9;
+        }
+        .status-sent {
+            background: #f0f9eb;
+            color: #67c23a;
+        }
+        .status-completed {
+            background: #f5fafe;
+            color: #1890ff;
+        }
+        .record-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .record-actions button {
+            padding: 8px;
+            font-size: 14px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-name {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .bg-setting, .notice-setting, .qr-setting {
+            padding: 20px;
+            border: 1px dashed #2d7ff9;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .notice-bar {
+            background-color: #e8f4ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #2d7ff9;
+            font-size: 14px;
+        }
+        .notice-bar strong {
+            color: #1a6ef0;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .modal-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #999;
+            width: auto;
+            height: auto;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 管理员注册页（默认显示） -->
+        <div class="page active" id="admin-register-page">
+            <h2 class="title">管理员注册</h2>
+            <div class="form-item">
+                <label for="reg-admin-username">管理员账号</label>
+                <input type="text" id="reg-admin-username" placeholder="设置管理员账号（唯一）">
+            </div>
+            <div class="form-item">
+                <label for="reg-admin-password">管理员密码</label>
+                <input type="password" id="reg-admin-password" placeholder="设置管理员密码">
+            </div>
+            <div class="form-item">
+                <label for="reg-admin-avatar">上传管理员头像</label>
+                <input type="file" id="reg-admin-avatar" accept="image/*" onchange="previewFile('reg-admin-avatar', 'reg-admin-avatar-preview')">
+                <img id="reg-admin-avatar-preview" class="avatar-preview" alt="头像预览">
+            </div>
+            <button onclick="adminRegister()">完成注册</button>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="switchAuthPage('login')">已有账号？去登录</button>
+            </div>
+        </div>
+        <!-- 管理员登录页 -->
+        <div class="page" id="admin-login-page">
+            <h2 class="title">管理员登录</h2>
+            <div class="form-item">
+                <label for="admin-username">管理员名称</label>
+                <input type="text" id="admin-username" placeholder="请输入管理员账号">
+            </div>
+            <div class="form-item">
+                <label for="admin-password">密码</label>
+                <input type="password" id="admin-password" placeholder="请输入管理员密码">
+            </div>
+            <button onclick="adminLogin()">登录后台</button>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="switchAuthPage('register')">没有账号？去注册</button>
+            </div>
+        </div>
+        <!-- 管理员后台页 -->
+        <div class="page" id="admin-page">
+            <div class="user-info">
+                <img id="admin-show-avatar" class="user-avatar" alt="管理员头像">
+                <div class="user-name" id="admin-show-name"></div>
+            </div>
+            <!-- 收款码设置模块 -->
+            <div class="qr-setting">
+                <h3 class="title" style="font-size:18px;margin-bottom:15px">收款码设置</h3>
+                <div class="form-item">
+                    <label for="qr-code">上传收款码图片</label>
+                    <input type="file" id="qr-code" accept="image/*" onchange="previewFile('qr-code', 'qr-code-preview')">
+                    <img id="qr-code-preview" class="qr-preview" alt="收款码预览">
+                </div>
+                <div class="form-item">
+                    <label for="qr-desc">收款说明（可选）</label>
+                    <textarea id="qr-desc" placeholder="例如：付款后请截图联系管理员确认..."></textarea>
+                </div>
+                <button onclick="saveQrCode()">保存收款码</button>
+                <button class="btn-secondary" onclick="clearQrCode()">清除收款码</button>
+            </div>
+            <!-- 公告设置模块 -->
+            <div class="notice-setting">
+                <h3 class="title" style="font-size:18px;margin-bottom:15px">网站公告设置</h3>
+                <div class="form-item">
+                    <label for="notice-content">公告内容</label>
+                    <textarea id="notice-content" placeholder="输入要展示的公告内容..."></textarea>
+                </div>
+                <button onclick="saveNotice()">保存公告</button>
+                <button class="btn-secondary" onclick="clearNotice()">清除公告</button>
+            </div>
+            <!-- 背景图设置模块 -->
+            <div class="bg-setting">
+                <h3 class="title" style="font-size:18px;margin-bottom:15px">网站背景图设置</h3>
+                <div class="form-item">
+                    <label for="bg-img">上传背景图片</label>
+                    <input type="file" id="bg-img" accept="image/*" onchange="previewFile('bg-img', 'bg-img-preview')">
+                    <img id="bg-img-preview" class="bg-preview" alt="背景图预览">
+                </div>
+                <div class="form-item">
+                    <label for="bg-opacity">背景图透明度 (数值越小越清晰)</label>
+                    <input type="range" id="bg-opacity" min="0" max="1" step="0.05" value="0.8">
+                    <div class="opacity-value">当前透明度：80%</div>
+                </div>
+                <button onclick="saveBgImage()">保存背景设置</button>
+                <button class="btn-secondary" onclick="clearBgImage()">清除背景图</button>
+            </div>
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchAdminTab('goods-tab', this)">商品管理</button>
+                <button class="tab-btn" onclick="switchAdminTab('record-tab', this)">付款记录</button>
+            </div>
+            <div class="tab-content active" id="goods-tab">
+                <h3 class="title">上架新道具</h3>
+                <div class="form-item">
+                    <label for="goods-name">道具名称</label>
+                    <input type="text" id="goods-name" placeholder="输入道具名称">
+                </div>
+                <div class="form-item">
+                    <label for="goods-price">定制价格（元）</label>
+                    <input type="number" id="goods-price" placeholder="输入道具价格" min="0.01" step="0.01">
+                </div>
+                <div class="form-item">
+                    <label for="goods-stock">初始库存（件）</label>
+                    <input type="number" id="goods-stock" placeholder="输入初始库存数量" min="1">
+                </div>
+                <div class="form-item">
+                    <label for="goods-img">道具图片</label>
+                    <input type="file" id="goods-img" accept="image/*" onchange="previewFile('goods-img', 'goods-img-preview')">
+                    <img id="goods-img-preview" class="bg-preview" alt="道具图片预览">
+                </div>
+                <button onclick="addGoods()">上架道具</button>
+                <h3 class="title" style="margin-top:30px">已上架道具</h3>
+                <div class="goods-list" id="admin-goods-list"></div>
+            </div>
+            <div class="tab-content" id="record-tab">
+                <h3 class="title">所有付款记录</h3>
+                <div id="pay-record-list"></div>
+            </div>
+            <button class="btn-secondary" style="margin-top:20px" onclick="adminLogout()">退出后台</button>
+        </div>
+    </div>
+
+    <!-- 发送资料弹窗 -->
+    <div class="modal" id="send-data-modal">
+        <div class="modal-content" style="position: relative;">
+            <button class="close-modal" onclick="closeSendModal()">×</button>
+            <h3 class="modal-title">向用户发送资料</h3>
+            <input type="hidden" id="current-record-id">
+            <div class="form-item">
+                <label for="send-text">文字说明（必填）</label>
+                <textarea id="send-text" placeholder="请输入道具使用说明、提取码等信息..."></textarea>
+            </div>
+            <div class="form-item">
+                <label for="send-img">上传图片/文件（可选）</label>
+                <input type="file" id="send-img" accept="image/*,.zip,.rar,.pdf" onchange="previewFile('send-img', 'send-img-preview')">
+                <img id="send-img-preview" class="send-img-preview" alt="文件预览">
+            </div>
+            <div class="form-item">
+                <label for="send-link">资料下载链接（可选）</label>
+                <input type="text" id="send-link" placeholder="粘贴下载链接">
+            </div>
+            <button class="btn-success" onclick="submitSendData()">确认发送</button>
+            <button class="btn-secondary" onclick="closeSendModal()" style="margin-top:10px">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 统一存储键名（与用户端一致，实现数据互通）
+        const ADMIN_KEY = 'xy_server_admin';
+        const GOODS_KEY = 'xy_server_goods';
+        const PAY_RECORD_KEY = 'xy_server_pay_records';
+        const CURRENT_ADMIN_KEY = 'xy_current_admin';
+        const BG_CONFIG_KEY = 'xy_server_bg_config';
+        const NOTICE_KEY = 'xy_server_notice';
+        const QR_CODE_KEY = 'xy_server_qr_code';
+        const SEND_DATA_KEY = 'xy_server_send_data'; // 存储发送资料记录
+
+        // 页面加载初始化
+        window.onload = function() {
+            loadBgConfig();
+            loadNotice();
+            loadQrCode();
+            checkAdminLoginStatus(); // 自动登录检测
+            // 透明度滑块事件
+            document.getElementById('bg-opacity').addEventListener('input', function() {
+                document.querySelector('.opacity-value').textContent = `当前透明度：${(this.value * 100).toFixed(0)}%`;
+                const bgConfig = JSON.parse(localStorage.getItem(BG_CONFIG_KEY) || '{}');
+                if (bgConfig.bgUrl) {
+                    document.body.style.setProperty('--bg-opacity', this.value);
+                }
+            });
+        }
+
+        // 切换注册/登录页
+        function switchAuthPage(type) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if (type === 'register') {
+                document.getElementById('admin-register-page').classList.add('active');
+            } else {
+                document.getElementById('admin-login-page').classList.add('active');
+            }
+        }
+
+        // 预览图片（修复：用FileReader实现持久化存储）
+        function previewFile(fileId, previewId) {
+            const file = document.getElementById(fileId).files[0];
+            const preview = document.getElementById(previewId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 管理员注册（修复：唯一账号+头像持久化）
+        function adminRegister() {
+            const username = document.getElementById('reg-admin-username').value.trim();
+            const password = document.getElementById('reg-admin-password').value.trim();
+            const avatarFile = document.getElementById('reg-admin-avatar').files[0];
+            
+            if (!username || !password) {
+                alert('账号和密码不能为空！');
+                return;
+            }
+            if (!avatarFile) {
+                alert('请上传管理员头像！');
+                return;
+            }
+            // 限制只能注册一个管理员
+            const existingAdmin = JSON.parse(localStorage.getItem(ADMIN_KEY) || '{}');
+            if (existingAdmin.username) {
+                alert('管理员账号已存在，无法重复注册！');
+                switchAuthPage('login');
+                return;
+            }
+            // 头像转base64存储
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const admin = {
+                    username,
+                    password,
+                    avatarUrl: e.target.result
+                };
+                localStorage.setItem(ADMIN_KEY, JSON.stringify(admin));
+                alert('注册成功！请登录');
+                switchAuthPage('login');
+            }
+            reader.readAsDataURL(avatarFile);
+        }
+
+        // 管理员登录（修复）
+        function adminLogin() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            const admin = JSON.parse(localStorage.getItem(ADMIN_KEY) || '{}');
+            if (!username || !password) {
+                alert('请输入账号密码！');
+                return;
+            }
+            if (admin.username !== username || admin.password !== password) {
+                alert('账号或密码错误！');
+                return;
+            }
+            localStorage.setItem(CURRENT_ADMIN_KEY, JSON.stringify(admin));
+            renderAdminPage(admin);
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('admin-page').classList.add('active');
+        }
+
+        // 收款码相关功能（修复：持久化存储）
+        function loadQrCode() {
+            const qrConfig = JSON.parse(localStorage.getItem(QR_CODE_KEY) || '{}');
+            if (qrConfig.qrUrl) {
+                document.getElementById('qr-code-preview').src = qrConfig.q.qrUrl;
+                document.getElementById('qr-code-preview').style.display = 'block';
+                document.getElementById('qr-desc').value = qrConfig.desc || '';
+            }
+        }
+
+        function saveQrCode() {
+            const qrFile = document.getElementById('qr-code').files[0];
+            if (!qrFile) {
+                alert('请先选择收款码图片！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const desc = document.getElementById('qr-desc').value.trim();
+                localStorage.setItem(QR_CODE_KEY, JSON.stringify({ qrUrl: e.target.result, desc }));
+                loadQrCode();
+                alert('收款码保存成功！用户购买后会显示');
+            }
+            reader.readAsDataURL(qrFile);
+        }
+
+        function clearQrCode() {
+            localStorage.removeItem(QR_CODE_KEY);
+            document.getElementById('qr-code-preview').style.display = 'none';
+            document.getElementById('qr-desc').value = '';
+            alert('收款码已清除');
+        }
+
+        // 背景图相关功能（修复：持久化存储）
+        function loadBgConfig() {
+            const bgConfig = JSON.parse(localStorage.getItem(BG_CONFIG_KEY) || '{}');
+            if (bgConfig.bgUrl) {
+                document.body.style.backgroundImage = `url(${bgConfig.bgUrl})`;
+                document.getElementById('bg-opacity').value = bgConfig.opacity || 0.8;
+                document.querySelector('.opacity-value').textContent = `当前透明度：${((bgConfig.opacity || 0.8) * 100).toFixed(0)}%`;
+                document.body.style.setProperty('--bg-opacity', bgConfig.opacity || 0.8);
+            }
+        }
+
+        function saveBgImage() {
+            const bgFile = document.getElementById('bg-img').files[0];
+            if (!bgFile) {
+                alert('请选择背景图片！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const opacity = parseFloat(document.getElementById('bg-opacity').value);
+                localStorage.setItem(BG_CONFIG_KEY, JSON.stringify({ bgUrl: e.target.result, opacity }));
+                loadBgConfig();
+                alert('背景设置成功！用户端会同步生效');
+            }
+            reader.readAsDataURL(bgFile);
+        }
+
+        function clearBgImage() {
+            localStorage.removeItem(BG_CONFIG_KEY);
+            document.body.style.backgroundImage = '';
+            document.body.style.setProperty('--bg-opacity', 0.8);
+            document.getElementById('bg-opacity').value = 0.8;
+            document.querySelector('.opacity-value').textContent = '当前透明度：80%';
+            alert('背景图已清除');
+        }
+
+        // 公告相关功能（互通）
+        function loadNotice() {
+            const notice = localStorage.getItem(NOTICE_KEY) || '';
+            document.getElementById('notice-content').value = notice;
+        }
+
+        function saveNotice() {
+            const notice = document.getElementById('notice-content').value.trim();
+            localStorage.setItem(NOTICE_KEY, notice);
+            alert('公告保存成功！用户端会同步展示');
+        }
+
+        function clearNotice() {
+            localStorage.removeItem(NOTICE_KEY);
+            document.getElementById('notice-content').value = '';
+            alert('公告已清除');
+        }
+
+        // 商品管理功能（修复+互通）
+        function switchAdminTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function renderAdminPage(admin) {
+            document.getElementById('admin-show-name').textContent = admin.username;
+            document.getElementById('admin-show-avatar').src = admin.avatarUrl;
+            renderAdminGoods();
+            renderPayRecords();
+        }
+
+        function addGoods() {
+            const name = document.getElementById('goods-name').value.trim();
+            const price = document.getElementById('goods-price').value.trim();
+            const stock = document.getElementById('goods-stock').value.trim();
+            const imgFile = document.getElementById('goods-img').files[0];
+            if (!name || !price || !stock || !imgFile) {
+                alert('请填写完整商品信息！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const goodsList = JSON.parse(localStorage.getItem(GOODS_KEY) || '[]');
+                goodsList.push({ 
+                    id: Date.now().toString(), 
+                    name, 
+                    price, 
+                    stock: parseInt(stock), 
+                    imgUrl: e.target.result 
+                });
+                localStorage.setItem(GOODS_KEY, JSON.stringify(goodsList));
+                alert('商品上架成功！用户端已同步');
+                renderAdminGoods();
+                // 清空表单
+                document.getElementById('goods-name').value = '';
+                document.getElementById('goods-price').value = '';
+                document.getElementById('goods-stock').value = '';
+                document.getElementById('goods-img').value = '';
+                document.getElementById('goods-img-preview').style.display = 'none';
+            }
+            reader.readAsDataURL(imgFile);
+        }
+
+        function renderAdminGoods() {
+            const goodsList = JSON.parse(localStorage.getItem(GOODS_KEY) || '[]');
+            const container = document.getElementById('admin-goods-list');
+            container.innerHTML = goodsList.length === 0 ? '<p style="text-align:center;color:#999;">暂无上架商品</p>' : '';
+            goodsList.forEach(goods => {
+                const stockClass = goods.stock <= 0 ? 'goods-stock stock-out' : 'goods-stock';
+                const stockText = goods.stock <= 0 ? '库存不足' : `库存剩余：${goods.stock} 件`;
+                container.innerHTML += `
+                    <div class="goods-item">
+                        <img src="${goods.imgUrl}" class="goods-img">
+                        <div class="goods-info">
+                            <div class="goods-name">${goods.name}</div>
+                            <div class="goods-price">价格：${goods.price} 元</div>
+                            <div class="${stockClass}">${stockText}</div>
+                        </div>
+                        <button class="btn-secondary" onclick="deleteGoods('${goods.id}')">删除</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteGoods(goodsId) {
+            if (confirm('确定要删除该商品吗？')) {
+                const goodsList = JSON.parse(localStorage.getItem(GOODS_KEY) || '[]');
+                const newGoodsList = goodsList.filter(g => g.id !== goodsId);
+                localStorage.setItem(GOODS_KEY, JSON.stringify(newGoodsList));
+                renderAdminGoods();
+                alert('商品已删除！');
+            }
+        }
+
+        // 付款记录展示（新增发送资料+确认完成功能）
+        function renderPayRecords() {
+            const records = JSON.parse(localStorage.getItem(PAY_RECORD_KEY) || '[]');
+            const sendDataList = JSON.parse(localStorage.getItem(SEND_DATA_KEY) || '[]');
+            const container = document.getElementById('pay-record-list');
+            container.innerHTML = records.length === 0 ? '<p style="text-align:center;color:#999;">暂无付款记录</p>' : '';
+            
+            records.forEach(record => {
+                // 获取该订单的发送状态和完成状态
+                const sendData = sendDataList.find(item => item.orderNo === record.orderNo);
+                const isSent = !!sendData;
+                const isCompleted = isSent && sendData.isCompleted;
+                let statusHtml = '';
+                
+                if (isCompleted) {
+                    statusHtml = '<span class="record-status status-completed">已完成</span>';
+                } else if (isSent) {
+                    statusHtml = '<span class="record-status status-sent">已发送资料</span>';
+                } else {
+                    statusHtml = '<span class="record-status status-paid">已付款待处理</span>';
+                }
+
+                container.innerHTML += `
+                    <div class="record-item">
+                        <p><strong>订单号：</strong>${record.orderNo} ${statusHtml}</p>
+                        <p><strong>用户：</strong>${record.username}</p>
+                        <p><strong>道具：</strong>${record.goodsName}</p>
+                        <p><strong>金额：</strong>${record.price} 元</p>
+                        <p><strong>时间：</strong>${record.payTime}</p>
+                        <div class="record-actions">
+                            <button class="btn-secondary" onclick="openSendModal('${record.orderNo}')" ${isSent ? 'disabled style="background:#ccc"' : ''}>
+                                ${isSent ? '已发送资料' : '发送资料'}
+                            </button>
+                            <button class="btn-success" onclick="confirmOrderCompleted('${record.orderNo}')" ${!isSent ? 'disabled style="background:#ccc"' : ''}>
+                                ${isCompleted ? '已确认完成' : '确认完成'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 打开发送资料弹窗
+        function openSendModal(orderNo) {
+            document.getElementById('current-record-id').value = orderNo;
+            document.getElementById('send-text').value = '';
+            document.getElementById('send-img').value = '';
+            document.getElementById('send-link').value = '';
+            document.getElementById('send-img-preview').style.display = 'none';
+            document.getElementById('send-data-modal').classList.add('active');
+        }
+
+        // 关闭发送资料弹窗
+        function closeSendModal() {
+            document.getElementById('send-data-modal').classList.remove('active');
+        }
+
+        // 提交发送资料
+        function submitSendData() {
+            const orderNo = document.getElementById('current-record-id').value;
+            const text = document.getElementById('send-text').value.trim();
+            const imgFile = document.getElementById('send-img').files[0];
+            const link = document.getElementById('send-link').value.trim();
+            
+            if (!text) {
+                alert('文字说明不能为空！');
+                return;
+            }
+
+            // 构建发送资料对象
+            const sendData = {
+                orderNo,
+                text,
+                link,
+                sendTime: new Date().toLocaleString(),
+                isCompleted: false
+            };
+
+            // 处理图片（如有）
+            if (imgFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    sendData.imgUrl = e.target.result;
+                    saveSendData(sendData);
+                }
+                reader.readAsDataURL(imgFile);
+            } else {
+                saveSendData(sendData);
+            }
+        }
+
+        // 保存发送资料记录
+        function saveSendData(sendData) {
+            const sendDataList = JSON.parse(localStorage.getItem(SEND_DATA_KEY) || '[]');
+            // 移除相同订单号的旧记录（更新）
+            const newSendDataList = sendDataList.filter(item => item.orderNo !== sendData.orderNo);
+            newSendDataList.push(sendData);
+            localStorage.setItem(SEND_DATA_KEY, JSON.stringify(newSendDataList));
+            closeSendModal();
+            alert('资料发送成功！');
+            renderPayRecords(); // 刷新记录列表
+        }
+
+        // 确认订单完成
+        function confirmOrderCompleted(orderNo) {
+            if (confirm('确定该订单已完成？')) {
+                const sendDataList = JSON.parse(localStorage.getItem(SEND_DATA_KEY) || '[]');
+                const updatedList = sendDataList.map(item => {
+                    if (item.orderNo === orderNo) {
+                        return { ...item, isCompleted: true, completeTime: new Date().toLocaleString() };
+                    }
+                    return item;
+                });
+                localStorage.setItem(SEND_DATA_KEY, JSON.stringify(updatedList));
+                alert('订单已确认完成！');
+                renderPayRecords(); // 刷新记录列表
+            }
+        }
+
+        // 管理员退出登录
+        function adminLogout() {
+            localStorage.removeItem(CURRENT_ADMIN_KEY);
+            switchAuthPage('login');
+        }
+
+        // 检查管理员登录状态
+        function checkAdminLoginStatus() {
+            const currentAdmin = localStorage.getItem(CURRENT_ADMIN_KEY);
+            if (currentAdmin) {
+                const admin = JSON.parse(currentAdmin);
+                renderAdminPage(admin);
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('admin-page').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
